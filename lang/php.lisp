@@ -16,6 +16,7 @@
     "protected" "public" "static" "switch" "throw" "try" "use" "var" "while" "xor"
     "die" "echo" "empty" "exit" "eval" "include" "include_once" "isset" "list"
     "require" "require_once" "return" "print" "unset" "__halt_compiler"))
+
 (defvar *php-predefined-constants*
   '("PHP_VERSION" "PHP_MAJOR_VERSION" "PHP_MINOR_VERSION" "PHP_RELEASE_VERSION"
      "PHP_VERSION_ID" "PHP_EXTRA_VERSION" "PHP_ZTS" "PHP_DEBUG" "PHP_MAXPATHLEN"
@@ -149,6 +150,12 @@
    (:word-ish
     (lambda (type s)
       (declare (ignore type))
-      (if (member s (append *php-reserved-words* *php-predefined-constants*) :test #'string=)
-          (format nil "<span class=\"symbol\">~A</span>" s)
-          s)))))
+      (let ((url (if (find-package :php-lookup)
+                         (funcall (symbol-function (intern "SYMBOL-LOOKUP" :php-lookup))
+                                  s)))
+             (result (if (member s (append *php-reserved-words* *php-predefined-constants*) :test #'string=)
+                         (format nil "<span class=\"symbol\">~A</span>" s)
+                         s)))
+        (if url
+            (format nil "<a href=\"~A\" class=\"symbol\">~A</a>" url result)
+            result))))))
