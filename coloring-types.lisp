@@ -104,7 +104,8 @@
                                                (mapcar #'(lambda (c)
                                                            (position c s))
                                                        (append *open-parens*
-                                                               *close-parens*)))))
+                                                               *close-parens*))))
+                       (*css-background-class* "paste"))
                    (if paren-pos
                        (let ((before-paren (subseq s 0 paren-pos))
                              (after-paren (subseq s (1+ paren-pos)))
@@ -175,7 +176,7 @@
       (format nil "<span class=\"syntaxerror\">~A</span>"
               s)))))
 
-(define-coloring-type :scheme "Scheme"
+(define-coloring-type :scheme "Scheme r5rs"
   :parent :lisp
   :transitions
   (((:normal :in-list)
@@ -198,6 +199,35 @@
       (declare (ignore type))
       (let ((result (if (find-package :r5rs-lookup)
                          (funcall (symbol-function (intern "SYMBOL-LOOKUP" :r5rs-lookup))
+                                  s))))
+        (if result
+            (format nil "<a href=\"~A\" class=\"symbol\">~A</a>"
+                    result (call-parent-formatter))
+            (call-parent-formatter)))))))
+
+(define-coloring-type :scheme-r6rs "Scheme r6rs"
+  :parent :lisp
+  :transitions
+  (((:normal :in-list)
+    ((scan "...")
+     (set-mode :symbol
+               :until (scan-any *non-constituent*)
+               :advancing nil))
+    ((scan #\[)
+     (set-mode :in-list
+               :until (scan #\])))))
+  :formatters
+  (((:in-list)
+    (lambda (type s)
+      (declare (ignore type s))
+      (let ((*open-parens* (cons #\[ *open-parens*))
+            (*close-parens* (cons #\] *close-parens*)))
+        (call-parent-formatter))))
+   ((:symbol :escaped-symbol)
+    (lambda (type s)
+      (declare (ignore type))
+      (let ((result (if (find-package :r6rs-lookup)
+                         (funcall (symbol-function (intern "SYMBOL-LOOKUP" :r6rs-lookup))
                                   s))))
         (if result
             (format nil "<a href=\"~A\" class=\"symbol\">~A</a>"
