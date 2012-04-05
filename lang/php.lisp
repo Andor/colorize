@@ -32,7 +32,7 @@
      "__CLASS__" "__DIR__" "__FILE__" "__LINE__" "__FUNCTION__" "__METHOD__" "__NAMESPACE__"))
 
 (defparameter *php-begin-word* "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
-(defparameter *php-terminators* '(#\space #\return #\tab #\newline #\. #\' #\" #\# #\, #\& #\= #\( #\) #\[ #\] #\{ #\} #\< #\> #\; #\- #\+ #\* #\/ #\\ #\:))
+(defparameter *php-terminators* '(#\space #\return #\tab #\newline #\. #\' #\" #\# #\, #\& #\= #\( #\) #\[ #\] #\{ #\} #\< #\> #\; #\- #\+ #\* #\/ #\\))
 
 (define-coloring-type :php "PHP"
   :default-mode :normal
