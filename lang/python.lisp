@@ -3,12 +3,25 @@
 (in-package :colorize)
 
 (defvar *python-reserved-words*
-  '("and"       "assert"        "break"         "class"         "continue"
-    "def"       "del"           "elif"          "else"          "except"
-    "exec"      "finally"       "for"           "from"          "global"
-    "if"        "import"        "in"            "is"            "lambda"
-    "not"       "or"            "pass"          "print"         "raise"
-    "return"    "try"           "while"         "yield"))
+  '( "and" "as" "assert" "break" "class" "continue"
+    "def" "del" "elif" "else" "except"
+    "exec" "finally" "for" "from" "global"
+    "if" "import" "in" "is" "lambda"
+    "not" "or" "pass" "print" "raise"
+    "return" "try" "while" "with" "yield"))
+(defvar *python-constants*
+  '("False" "True" "None" "NotImplemented" "Ellipsis" "__debug__" "copyright" "license" "credits"))
+(defvar *python-functions*
+  '("abs" "divmod" "input" "open" "staticmethod" "all" "enumerate" "int" "ord" "str"
+    "any" "eval" "isinstance" "pow" "sum" "basestring" "execfile" "issubclass" "print" "super"
+    "bin" "file" "iter" "property" "tuple" "bool" "filter" "len" "range" "type"
+    "bytearray" "float" "list" "raw_input" "unichr" "callable" "format" "locals" "reduce" "unicode"
+    "chr" "frozenset" "long" "reload" "vars" "classmethod" "getattr" "map" "repr" "xrange"
+    "cmp" "globals" "max" "reversed" "zip" "compile" "hasattr" "memoryview" "round" "__import__"
+    "complex" "hash" "min" "set" "apply" "delattr" "help" "next" "setattr" "buffer"
+    "dict" "hex" "object" "slice" "coerce" "dir" "id" "oct" "sorted" "intern"))
+
+(defvar *python-functions-doc-prefix* "http://docs.python.org/library/functions.html#")
 
 (define-coloring-type :python "Python"
   :default-mode :normal
@@ -103,8 +116,7 @@
    (:def
        (lambda (type s)
 	 (declare (ignore type))
-	 (format nil "<span class=\"special\">~A</span><span
-class=\"keyword\">~A</span>"
+	 (format nil "<span class=\"special\">~A</span><span class=\"keyword\">~A</span>"
 		 (subseq s 0 (position #\Space s))
 		 (subseq s (position #\Space s)))))
    (:decorator
@@ -114,7 +126,15 @@ class=\"keyword\">~A</span>"
    (:word-ish
     (lambda (type s)
       (declare (ignore type))
-      (if (member s *python-reserved-words* :test #'string=)
-	  (format nil "<span class=\"symbol\">~A</span>"
-		  s)
-	  s)))))
+      (let ((result s))
+        (if (member s *python-reserved-words* :test #'string=)
+            (setf result (format nil "<span class=\"keyword\">~A</span>" result))
+            (if (member s *python-constants* :test #'string=)
+                (setf result (format nil "<span class=\"special\">~A</span>" result))))
+        (if (member s *python-functions* :test #'string=)
+            (setf result
+                  (format nil "<a href=\"~A\" class=\"symbol\">~A</a>"
+                          (concatenate 'string *python-functions-doc-prefix* result)
+                          result)))
+        
+        result)))))
