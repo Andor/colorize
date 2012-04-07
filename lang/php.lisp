@@ -17,20 +17,6 @@
     "die" "echo" "empty" "exit" "eval" "include" "include_once" "isset" "list"
     "require" "require_once" "return" "print" "unset" "__halt_compiler"))
 
-(defvar *php-predefined-constants*
-  '("PHP_VERSION" "PHP_MAJOR_VERSION" "PHP_MINOR_VERSION" "PHP_RELEASE_VERSION"
-     "PHP_VERSION_ID" "PHP_EXTRA_VERSION" "PHP_ZTS" "PHP_DEBUG" "PHP_MAXPATHLEN"
-     "PHP_OS" "PHP_SAPI" "PHP_EOL" "PHP_INT_MAX" "PHP_INT_SIZE"
-     "DEFAULT_INCLUDE_PATH" "PEAR_INSTALL_DIR" "PEAR_EXTENSION_DIR"
-     "PHP_EXTENSION_DIR" "PHP_PREFIX" "PHP_BINDIR" "PHP_BINARY" "PHP_MANDIR"
-     "PHP_LIBDIR" "PHP_DATADIR" "PHP_SYSCONFDIR" "PHP_LOCALSTATEDIR"
-     "PHP_CONFIG_FILE_PATH" "PHP_CONFIG_FILE_SCAN_DIR" "PHP_SHLIB_SUFFIX"
-     "PHP_OUTPUT_HANDLER_START" "PHP_OUTPUT_HANDLER_CONT" "PHP_OUTPUT_HANDLER_END"
-     "E_ERROR" "E_WARNING" "E_PARSE" "E_NOTICE" "E_CORE_ERROR" "E_CORE_WARNING"
-     "E_COMPILE_ERROR" "E_COMPILE_WARNING" "E_USER_ERROR" "E_USER_WARNING"
-     "E_USER_NOTICE" "E_DEPRECATED" "E_USER_DEPRECATED" "E_ALL" "E_STRICT" "__COMPILER_HALT_OFFSET__"
-     "__CLASS__" "__DIR__" "__FILE__" "__LINE__" "__FUNCTION__" "__METHOD__" "__NAMESPACE__"))
-
 (defparameter *php-begin-word* "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
 (defparameter *php-terminators* '(#\space #\return #\tab #\newline #\. #\' #\" #\# #\, #\& #\= #\( #\) #\[ #\] #\{ #\} #\< #\> #\; #\- #\+ #\* #\/ #\\))
 
@@ -150,14 +136,20 @@
    (:word-ish
     (lambda (type s)
       (declare (ignore type))
-      (let ((url (if (find-package :php-lookup)
-                         (funcall (symbol-function (intern "SYMBOL-LOOKUP" :php-lookup))
-                                  s)))
-            (result (if (member s *php-reserved-words* :test #'string=)
-                        (format nil "<span class=\"keyword\">~A</span>" s)
-                        (if (member s *php-predefined-constants* :test #'string=)
-                            (format nil "<span class=\"special\">~A</span>" s)
-                            s))))
+      (let ((result s)
+            (url (if (find-package :php-lookup)
+                     (funcall (symbol-function (intern "SYMBOL-LOOKUP" :php-lookup))
+                              s)))
+            (class
+             (if (find s *php-reserved-words* :test #'string=)
+                 "symbol"
+                 (if (find-package :php-lookup)
+                     (if (funcall (symbol-function (intern "CONSTANT-LOOKUP" :php-lookup))
+                                  s)
+                         "special")))))
+        
+        (if class
+            (setf result (format nil "<span class=\"~A\">~A</span>" class s)))
         (if url
             (format nil "<a href=\"~A\" class=\"symbol\">~A</a>" url result)
-            result))))))
+            result)))))))
